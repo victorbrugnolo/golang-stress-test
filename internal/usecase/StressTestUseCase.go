@@ -11,28 +11,31 @@ import (
 func Execute(url string, requests, concurrency int) error {
 	t := time.Now()
 	concurrencyGroupSize := requests / concurrency
+	concurrencyGroupSizeRemainder := requests % concurrency
+
 	totalByStatus := sync.Map{}
 
 	for i := 0; i < concurrencyGroupSize; i++ {
-		fmt.Printf("Request %d\n", i)
 		wg := &sync.WaitGroup{}
-		wg.Add(concurrencyGroupSize)
 
 		for j := 0; j < concurrency; j++ {
-			go func() {
-				defer wg.Done()
-
-				statusCode := makeRequest(url)
-				val, _ := totalByStatus.LoadOrStore(statusCode, new(int64))
-				ptr := val.(*int64)
-				atomic.AddInt64(ptr, 1)
-			}()
-
+			makeConcurrentRequests(wg, url, &totalByStatus)
 		}
 
 		wg.Wait()
 	}
 
+	if concurrencyGroupSizeRemainder > 0 {
+		wg := &sync.WaitGroup{}
+
+		for j := 0; j < concurrencyGroupSizeRemainder; j++ {
+			makeConcurrentRequests(wg, url, &totalByStatus)
+		}
+
+		wg.Wait()
+	}
+
+	fmt.Println()
 	fmt.Printf("Time elapsed: %s\n", time.Since(t))
 	fmt.Printf("Total requests: %d\n", requests)
 
@@ -51,11 +54,25 @@ func Execute(url string, requests, concurrency int) error {
 	return nil
 }
 
+func makeConcurrentRequests(wg *sync.WaitGroup, url string, totalByStatus *sync.Map) {
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+
+		statusCode := makeRequest(url)
+		val, _ := totalByStatus.LoadOrStore(statusCode, new(int64))
+		ptr := val.(*int64)
+		atomic.AddInt64(ptr, 1)
+	}()
+}
+
 func makeRequest(url string) int {
+	fmt.Printf("Requesting %s\n", url)
 	resp, err := http.Get(url)
 
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		fmt.Printf("Request error: %s\n", err.Error())
 		return 0
 	}
 
