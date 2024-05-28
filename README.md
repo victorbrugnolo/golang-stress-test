@@ -20,7 +20,7 @@ The application use three mandatory parameters:
 ```bash
 go run main.go --url "https://httpbin.org/get" --requests 1000 --concurrency 100
 ```
-### Or
+#### Or
 ```bash
 docker run container_name --url "https://httpbin.org/get" --requests 100 --concurrency 10
 ```
