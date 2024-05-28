@@ -19,7 +19,7 @@ func Execute(url string, requests, concurrency int) error {
 		wg := &sync.WaitGroup{}
 
 		for j := 0; j < concurrency; j++ {
-			makeConcurrentRequests(wg, url, &totalByStatus)
+			makeConcurrentRequest(wg, url, &totalByStatus)
 		}
 
 		wg.Wait()
@@ -29,7 +29,7 @@ func Execute(url string, requests, concurrency int) error {
 		wg := &sync.WaitGroup{}
 
 		for j := 0; j < concurrencyGroupSizeRemainder; j++ {
-			makeConcurrentRequests(wg, url, &totalByStatus)
+			makeConcurrentRequest(wg, url, &totalByStatus)
 		}
 
 		wg.Wait()
@@ -54,7 +54,7 @@ func Execute(url string, requests, concurrency int) error {
 	return nil
 }
 
-func makeConcurrentRequests(wg *sync.WaitGroup, url string, totalByStatus *sync.Map) {
+func makeConcurrentRequest(wg *sync.WaitGroup, url string, totalByStatus *sync.Map) {
 	wg.Add(1)
 
 	go func() {
