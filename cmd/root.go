@@ -4,10 +4,10 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/victorbrugnolo/golang-stress-test/internal/usecase"
 )
 
 var rootCmd = &cobra.Command{
@@ -19,9 +19,11 @@ var rootCmd = &cobra.Command{
 		requests, _ := cmd.Flags().GetInt("requests")
 		concurrency, _ := cmd.Flags().GetInt("concurrency")
 
-		fmt.Printf("URL: %s\n", url)
-		fmt.Printf("Requests: %d\n", requests)
-		fmt.Printf("Concurrency: %d\n", concurrency)
+		err := usecase.Execute(url, requests, concurrency)
+
+		if err != nil {
+			return err
+		}
 
 		return nil
 	},
